@@ -15,9 +15,15 @@
  * (end)
  *
  */
-import {MxClient} from "../MxClient";
-import {MxLog} from "./MxLog";
-import {MxConstants} from "./MxConstants";
+import {MxClient} from "../MxClient.js";
+import {MxLog} from "./MxLog.js";
+import {MxConstants} from "./MxConstants.js";
+import {MxEvent} from "./MxEvent.js";
+import {MxRectangle} from "./MxRectangle.js"
+import {MxXmlRequest} from "./MxXmlRequest";
+import {MxObjectIdentity} from "./MxObjectIdentity";
+import {MxDictionary} from "./MxDictionary";
+import {MxPoint} from "./MxPoint";
 
 export class MxUtils {
 
@@ -955,1080 +961,995 @@ export class MxUtils {
 
         return button;
     }
-}
 
-/**
- * Copyright (c) 2006-2015, JGraph Ltd
- * Copyright (c) 2006-2015, Gaudenz Alder
- */
-var mxUtils =
-    {
-        //TODO continue refactoring here
-        /**
-         * Function: para
-         *
-         * Appends a new paragraph with the given text to the specified parent and
-         * returns the paragraph.
-         *
-         * Parameters:
-         *
-         * parent - DOM node to append the text node to.
-         * text - String representing the text for the new paragraph.
-         */
-        para: function (parent, text) {
-            var p = document.createElement('p');
-            mxUtils.write(p, text);
+    /**
+     * Appends a new paragraph with the given text to the specified parent and
+     * returns the paragraph.
+     * @param parent - DOM node to append the text node to.
+     * @param text - String representing the text for the new paragraph.
+     */
+    static para(parent, text) {
+        let p = document.createElement('p');
+        MxUtils.write(p, text);
 
-            if (parent != null) {
-                parent.appendChild(p);
-            }
+        if (parent != null) {
+            parent.appendChild(p);
+        }
 
-            return p;
-        },
+        return p;
+    }
 
-        /**
-         * Function: addTransparentBackgroundFilter
-         *
-         * Adds a transparent background to the filter of the given node. This
-         * background can be used in IE8 standards mode (native IE8 only) to pass
-         * events through the node.
-         */
-        addTransparentBackgroundFilter: function (node) {
-            node.style.filter += 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'' +
-                mxClient.imageBasePath + '/transparent.gif\', sizingMethod=\'scale\')';
-        },
+    /**
+     * Adds a transparent background to the filter of the given node. This
+     * background can be used in IE8 standards mode (native IE8 only) to pass
+     * events through the node.
+     * @param node
+     */
+    static addTransparentBackgroundFilter(node) {
+        node.style.filter += 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'' +
+            MxClient.imageBasePath + '/transparent.gif\', sizingMethod=\'scale\')';
+    }
 
-        /**
-         * Function: linkAction
-         *
-         * Adds a hyperlink to the specified parent that invokes action on the
-         * specified editor.
-         *
-         * Parameters:
-         *
-         * parent - DOM node to contain the new link.
-         * text - String that is used as the link label.
-         * editor - <mxEditor> that will execute the action.
-         * action - String that defines the name of the action to be executed.
-         * pad - Optional left-padding for the link. Default is 0.
-         */
-        linkAction: function (parent, text, editor, action, pad) {
-            return mxUtils.link(parent, text, function () {
-                editor.execute(action);
-            }, pad);
-        },
+    /**
+     * Adds a hyperlink to the specified parent that invokes action on the
+     * specified editor.
+     * @param parent - DOM node to contain the new link.
+     * @param text - String that is used as the link label.
+     * @param editor - <mxEditor> that will execute the action.
+     * @param action - String that defines the name of the action to be executed.
+     * @param pad - Optional left-padding for the link. Default is 0.
+     */
+    static linkAction(parent, text, editor, action, pad) {
+        return MxUtils.link(parent, text, function () {
+            editor.execute(action);
+        }, pad);
+    }
 
-        /**
-         * Function: linkInvoke
-         *
-         * Adds a hyperlink to the specified parent that invokes the specified
-         * function on the editor passing along the specified argument. The
-         * function name is the name of a function of the editor instance,
-         * not an action name.
-         *
-         * Parameters:
-         *
-         * parent - DOM node to contain the new link.
-         * text - String that is used as the link label.
-         * editor - <mxEditor> instance to execute the function on.
-         * functName - String that represents the name of the function.
-         * arg - Object that represents the argument to the function.
-         * pad - Optional left-padding for the link. Default is 0.
-         */
-        linkInvoke: function (parent, text, editor, functName, arg, pad) {
-            return mxUtils.link(parent, text, function () {
-                editor[functName](arg);
-            }, pad);
-        },
+    /**
+     * Adds a hyperlink to the specified parent that invokes the specified
+     * function on the editor passing along the specified argument. The
+     * function name is the name of a function of the editor instance,
+     * not an action name.
+     *
+     * @param parent - DOM node to contain the new link.
+     * @param text - String that is used as the link label.
+     * @param editor - <mxEditor> instance to execute the function on.
+     * @param functName - String that represents the name of the function.
+     * @param arg - Object that represents the argument to the function.
+     * @param pad - Optional left-padding for the link. Default is 0.
+     */
+    static linkInvoke(parent, text, editor, functName, arg, pad) {
+        return MxUtils.link(parent, text, function () {
+            editor[functName](arg);
+        }, pad);
+    }
 
-        /**
-         * Function: link
-         *
-         * Adds a hyperlink to the specified parent and invokes the given function
-         * when the link is clicked.
-         *
-         * Parameters:
-         *
-         * parent - DOM node to contain the new link.
-         * text - String that is used as the link label.
-         * funct - Function to execute when the link is clicked.
-         * pad - Optional left-padding for the link. Default is 0.
-         */
-        link: function (parent, text, funct, pad) {
-            var a = document.createElement('span');
+    /**
+     * Adds a hyperlink to the specified parent and invokes the given function
+     * when the link is clicked.
+     *
+     * @param parent - DOM node to contain the new link.
+     * @param text - String that is used as the link label.
+     * @param funct - Function to execute when the link is clicked.
+     * @param pad - Optional left-padding for the link. Default is 0.
+     */
+    static link(parent, text, funct, pad) {
+        let a = document.createElement('span');
 
-            a.style.color = 'blue';
-            a.style.textDecoration = 'underline';
-            a.style.cursor = 'pointer';
+        a.style.color = 'blue';
+        a.style.textDecoration = 'underline';
+        a.style.cursor = 'pointer';
 
-            if (pad != null) {
-                a.style.paddingLeft = pad + 'px';
-            }
+        if (pad != null) {
+            a.style.paddingLeft = pad + 'px';
+        }
 
-            mxEvent.addListener(a, 'click', funct);
-            mxUtils.write(a, text);
+        MxEvent.addListener(a, 'click', funct);
+        MxUtils.write(a, text);
 
-            if (parent != null) {
-                parent.appendChild(a);
-            }
+        if (parent != null) {
+            parent.appendChild(a);
+        }
 
-            return a;
-        },
+        return a;
+    }
 
-        /**
-         * Function: getDocumentSize
-         *
-         * Returns the client size for the current document as an <mxRectangle>.
-         */
-        getDocumentSize: function () {
-            var b = document.body;
-            var d = document.documentElement;
+    /**
+     * Returns the client size for the current document as an <MxRectangle>.
+     */
+    static getDocumentSize() {
+        let b = document.body;
+        let d = document.documentElement;
 
-            try {
-                return new mxRectangle(0, 0, b.clientWidth || d.clientWidth, Math.max(b.clientHeight || 0, d.clientHeight));
-            } catch (e) {
-                return new mxRectangle();
-            }
-        },
+        try {
+            return new MxRectangle(0, 0, b.clientWidth || d.clientWidth, Math.max(b.clientHeight || 0, d.clientHeight));
+        } catch (e) {
+            return new MxRectangle();
+        }
+    }
 
-        /**
-         * Function: fit
-         *
-         * Makes sure the given node is inside the visible area of the window. This
-         * is done by setting the left and top in the style.
-         */
-        fit: function (node) {
-            var ds = mxUtils.getDocumentSize();
-            var left = parseInt(node.offsetLeft);
-            var width = parseInt(node.offsetWidth);
+    /**
+     * Makes sure the given node is inside the visible area of the window. This
+     * is done by setting the left and top in the style.
+     * @param node
+     */
+    fit(node) {
+        let ds = MxUtils.getDocumentSize();
+        let left = parseInt(node.offsetLeft);
+        let width = parseInt(node.offsetWidth);
 
-            var offset = mxUtils.getDocumentScrollOrigin(node.ownerDocument);
-            var sl = offset.x;
-            var st = offset.y;
+        let offset = MxUtils.getDocumentScrollOrigin(node.ownerDocument);
+        let sl = offset.x;
+        let st = offset.y;
 
-            var b = document.body;
-            var d = document.documentElement;
-            var right = (sl) + ds.width;
+        let b = document.body;
+        let d = document.documentElement;
+        let right = (sl) + ds.width;
 
-            if (left + width > right) {
-                node.style.left = Math.max(sl, right - width) + 'px';
-            }
+        if (left + width > right) {
+            node.style.left = Math.max(sl, right - width) + 'px';
+        }
 
-            var top = parseInt(node.offsetTop);
-            var height = parseInt(node.offsetHeight);
+        let top = parseInt(node.offsetTop);
+        let height = parseInt(node.offsetHeight);
 
-            var bottom = st + ds.height;
+        let bottom = st + ds.height;
 
-            if (top + height > bottom) {
-                node.style.top = Math.max(st, bottom - height) + 'px';
-            }
-        },
+        if (top + height > bottom) {
+            node.style.top = Math.max(st, bottom - height) + 'px';
+        }
+    }
 
-        /**
-         * Function: load
-         *
-         * Loads the specified URL *synchronously* and returns the <mxXmlRequest>.
-         * Throws an exception if the file cannot be loaded. See <mxUtils.get> for
-         * an asynchronous implementation.
-         *
-         * Example:
-         *
-         * (code)
-         * try
-         * {
-         *   var req = mxUtils.load(filename);
-         *   var root = req.getDocumentElement();
-         *   // Process XML DOM...
-         * }
-         * catch (ex)
-         * {
-         *   mxUtils.alert('Cannot load '+filename+': '+ex);
-         * }
-         * (end)
-         *
-         * Parameters:
-         *
-         * url - URL to get the data from.
-         */
-        load: function (url) {
-            var req = new mxXmlRequest(url, null, 'GET', false);
-            req.send();
+    /**
+     * Loads the specified URL *synchronously* and returns the <mxXmlRequest>.
+     * Throws an exception if the file cannot be loaded. See <mxUtils.get> for
+     * an asynchronous implementation.
+     *
+     * Example:
+     *
+     * (code)
+     * try
+     * {
+     *   var req = mxUtils.load(filename);
+     *   var root = req.getDocumentElement();
+     *   // Process XML DOM...
+     * }
+     * catch (ex)
+     * {
+     *   mxUtils.alert('Cannot load '+filename+': '+ex);
+     * }
+     * (end)
+     *
+     * @param url - URL to get the data from.
+     */
+    static load(url) {
+        let req = new MxXmlRequest(url, null, 'GET', false);
+        req.send();
 
-            return req;
-        },
+        return req;
+    }
 
-        /**
-         * Function: get
-         *
-         * Loads the specified URL *asynchronously* and invokes the given functions
-         * depending on the request status. Returns the <mxXmlRequest> in use. Both
-         * functions take the <mxXmlRequest> as the only parameter. See
-         * <mxUtils.load> for a synchronous implementation.
-         *
-         * Example:
-         *
-         * (code)
-         * mxUtils.get(url, function(req)
-         * {
-         *    var node = req.getDocumentElement();
-         *    // Process XML DOM...
-         * });
-         * (end)
-         *
-         * So for example, to load a diagram into an existing graph model, the
-         * following code is used.
-         *
-         * (code)
-         * mxUtils.get(url, function(req)
-         * {
-         *   var node = req.getDocumentElement();
-         *   var dec = new mxCodec(node.ownerDocument);
-         *   dec.decode(node, graph.getModel());
-         * });
-         * (end)
-         *
-         * Parameters:
-         *
-         * url - URL to get the data from.
-         * onload - Optional function to execute for a successful response.
-         * onerror - Optional function to execute on error.
-         * binary - Optional boolean parameter that specifies if the request is
-         * binary.
-         * timeout - Optional timeout in ms before calling ontimeout.
-         * ontimeout - Optional function to execute on timeout.
-         * headers - Optional with headers, eg. {'Authorization': 'token xyz'}
-         */
-        get: function (url, onload, onerror, binary, timeout, ontimeout, headers) {
-            var req = new mxXmlRequest(url, null, 'GET');
-            var setRequestHeaders = req.setRequestHeaders;
+    /**
+     * Loads the specified URL *asynchronously* and invokes the given functions
+     * depending on the request status. Returns the <MxXmlRequest> in use. Both
+     * functions take the <MxXmlRequest> as the only parameter. See
+     * <MxUtils.load> for a synchronous implementation.
+     *
+     * Example:
+     *
+     * (code)
+     * MxUtils.get(url, function(req)
+     * {
+     *    var node = req.getDocumentElement();
+     *    // Process XML DOM...
+     * });
+     * (end)
+     *
+     * So for example, to load a diagram into an existing graph model, the
+     * following code is used.
+     *
+     * (code)
+     * MxUtils.get(url, function(req)
+     * {
+     *   var node = req.getDocumentElement();
+     *   var dec = new mxCodec(node.ownerDocument);
+     *   dec.decode(node, graph.getModel());
+     * });
+     * (end)
+     *
+     * @param url - URL to get the data from.
+     * @param onload - Optional function to execute for a successful response.
+     * @param onerror - Optional function to execute on error.
+     * @param binary - Optional boolean parameter that specifies if the request is
+     * binary.
+     * @param timeout - Optional timeout in ms before calling ontimeout.
+     * ontimeout - Optional function to execute on timeout.
+     * @param headers - Optional with headers, eg. {'Authorization': 'token xyz'}
+     */
+    static get(url, onload, onerror, binary, timeout, ontimeout, headers) {
+        let req = new MxXmlRequest(url, null, 'GET');
+        let setRequestHeaders = req.setRequestHeaders;
 
-            if (headers) {
-                req.setRequestHeaders = function (request, params) {
-                    setRequestHeaders.apply(this, arguments);
+        if (headers) {
+            req.setRequestHeaders = (request, params) => {
+                setRequestHeaders.apply(this, arguments);
 
-                    for (var key in headers) {
-                        request.setRequestHeader(key, headers[key]);
-                    }
-                };
-            }
-
-            if (binary != null) {
-                req.setBinary(binary);
-            }
-
-            req.send(onload, onerror, timeout, ontimeout);
-
-            return req;
-        },
-
-        /**
-         * Function: getAll
-         *
-         * Loads the URLs in the given array *asynchronously* and invokes the given function
-         * if all requests returned with a valid 2xx status. The error handler is invoked
-         * once on the first error or invalid response.
-         *
-         * Parameters:
-         *
-         * urls - Array of URLs to be loaded.
-         * onload - Callback with array of <mxXmlRequests>.
-         * onerror - Optional function to execute on error.
-         */
-        getAll: function (urls, onload, onerror) {
-            var remain = urls.length;
-            var result = [];
-            var errors = 0;
-            var err = function () {
-                if (errors == 0 && onerror != null) {
-                    onerror();
+                for (let key in headers) {
+                    request.setRequestHeader(key, headers[key]);
                 }
-
-                errors++;
             };
+        }
 
-            for (var i = 0; i < urls.length; i++) {
-                (function (url, index) {
-                    mxUtils.get(url, function (req) {
-                        var status = req.getStatus();
+        if (binary != null) {
+            req.setBinary(binary);
+        }
 
-                        if (status < 200 || status > 299) {
-                            err();
-                        } else {
-                            result[index] = req;
-                            remain--;
+        req.send(onload, onerror, timeout, ontimeout);
 
-                            if (remain == 0) {
-                                onload(result);
-                            }
-                        }
-                    }, err);
-                })(urls[i], i);
+        return req;
+    }
+
+    /**
+     * Loads the URLs in the given array *asynchronously* and invokes the given function
+     * if all requests returned with a valid 2xx status. The error handler is invoked
+     * once on the first error or invalid response.
+     *
+     * @param urls - Array of URLs to be loaded.
+     * @param onload - Callback with array of <mxXmlRequests>.
+     * @param onerror - Optional function to execute on error.
+     */
+    static getAll(urls, onload, onerror) {
+        let remain = urls.length;
+        let result = [];
+        let errors = 0;
+        let err = () => {
+            if (errors == 0 && onerror != null) {
+                onerror();
             }
+            errors++;
+        };
 
-            if (remain == 0) {
-                onload(result);
-            }
-        },
+        for (let i = 0; i < urls.length; i++) {
+            let url = urls[i];
+            let index = i;
+            MxUtils.get(url, (req) => {
+                let status = req.getStatus();
 
-        /**
-         * Function: post
-         *
-         * Posts the specified params to the given URL *asynchronously* and invokes
-         * the given functions depending on the request status. Returns the
-         * <mxXmlRequest> in use. Both functions take the <mxXmlRequest> as the
-         * only parameter. Make sure to use encodeURIComponent for the parameter
-         * values.
-         *
-         * Example:
-         *
-         * (code)
-         * mxUtils.post(url, 'key=value', function(req)
-         * {
-         * 	mxUtils.alert('Ready: '+req.isReady()+' Status: '+req.getStatus());
-         *  // Process req.getDocumentElement() using DOM API if OK...
-         * });
-         * (end)
-         *
-         * Parameters:
-         *
-         * url - URL to get the data from.
-         * params - Parameters for the post request.
-         * onload - Optional function to execute for a successful response.
-         * onerror - Optional function to execute on error.
-         */
-        post: function (url, params, onload, onerror) {
-            return new mxXmlRequest(url, params).send(onload, onerror);
-        },
+                if (status < 200 || status > 299) {
+                    err();
+                } else {
+                    result[index] = req;
+                    remain--;
 
-        /**
-         * Function: submit
-         *
-         * Submits the given parameters to the specified URL using
-         * <mxXmlRequest.simulate> and returns the <mxXmlRequest>.
-         * Make sure to use encodeURIComponent for the parameter
-         * values.
-         *
-         * Parameters:
-         *
-         * url - URL to get the data from.
-         * params - Parameters for the form.
-         * doc - Document to create the form in.
-         * target - Target to send the form result to.
-         */
-        submit: function (url, params, doc, target) {
-            return new mxXmlRequest(url, params).simulate(doc, target);
-        },
-
-        /**
-         * Function: loadInto
-         *
-         * Loads the specified URL *asynchronously* into the specified document,
-         * invoking onload after the document has been loaded. This implementation
-         * does not use <mxXmlRequest>, but the document.load method.
-         *
-         * Parameters:
-         *
-         * url - URL to get the data from.
-         * doc - The document to load the URL into.
-         * onload - Function to execute when the URL has been loaded.
-         */
-        loadInto: function (url, doc, onload) {
-            if (mxClient.IS_IE) {
-                doc.onreadystatechange = function () {
-                    if (doc.readyState == 4) {
-                        onload();
-                    }
-                };
-            } else {
-                doc.addEventListener('load', onload, false);
-            }
-
-            doc.load(url);
-        },
-
-        /**
-         * Function: getValue
-         *
-         * Returns the value for the given key in the given associative array or
-         * the given default value if the value is null.
-         *
-         * Parameters:
-         *
-         * array - Associative array that contains the value for the key.
-         * key - Key whose value should be returned.
-         * defaultValue - Value to be returned if the value for the given
-         * key is null.
-         */
-        getValue: function (array, key, defaultValue) {
-            var value = (array != null) ? array[key] : null;
-
-            if (value == null) {
-                value = defaultValue;
-            }
-
-            return value;
-        },
-
-        /**
-         * Function: getNumber
-         *
-         * Returns the numeric value for the given key in the given associative
-         * array or the given default value (or 0) if the value is null. The value
-         * is converted to a numeric value using the Number function.
-         *
-         * Parameters:
-         *
-         * array - Associative array that contains the value for the key.
-         * key - Key whose value should be returned.
-         * defaultValue - Value to be returned if the value for the given
-         * key is null. Default is 0.
-         */
-        getNumber: function (array, key, defaultValue) {
-            var value = (array != null) ? array[key] : null;
-
-            if (value == null) {
-                value = defaultValue || 0;
-            }
-
-            return Number(value);
-        },
-
-        /**
-         * Function: getColor
-         *
-         * Returns the color value for the given key in the given associative
-         * array or the given default value if the value is null. If the value
-         * is <mxConstants.NONE> then null is returned.
-         *
-         * Parameters:
-         *
-         * array - Associative array that contains the value for the key.
-         * key - Key whose value should be returned.
-         * defaultValue - Value to be returned if the value for the given
-         * key is null. Default is null.
-         */
-        getColor: function (array, key, defaultValue) {
-            var value = (array != null) ? array[key] : null;
-
-            if (value == null) {
-                value = defaultValue;
-            } else if (value == mxConstants.NONE) {
-                value = null;
-            }
-
-            return value;
-        },
-
-        /**
-         * Function: clone
-         *
-         * Recursively clones the specified object ignoring all fieldnames in the
-         * given array of transient fields. <mxObjectIdentity.FIELD_NAME> is always
-         * ignored by this function.
-         *
-         * Parameters:
-         *
-         * obj - Object to be cloned.
-         * transients - Optional array of strings representing the fieldname to be
-         * ignored.
-         * shallow - Optional boolean argument to specify if a shallow clone should
-         * be created, that is, one where all object references are not cloned or,
-         * in other words, one where only atomic (strings, numbers) values are
-         * cloned. Default is false.
-         */
-        clone: function (obj, transients, shallow) {
-            shallow = (shallow != null) ? shallow : false;
-            var clone = null;
-
-            if (obj != null && typeof (obj.constructor) == 'function') {
-                clone = new obj.constructor();
-
-                for (var i in obj) {
-                    if (i != mxObjectIdentity.FIELD_NAME && (transients == null ||
-                        mxUtils.indexOf(transients, i) < 0)) {
-                        if (!shallow && typeof (obj[i]) == 'object') {
-                            clone[i] = mxUtils.clone(obj[i]);
-                        } else {
-                            clone[i] = obj[i];
-                        }
+                    if (remain == 0) {
+                        onload(result);
                     }
                 }
-            }
+            }, err);
+        }
 
-            return clone;
-        },
+        if (remain == 0) {
+            onload(result);
+        }
+    }
 
-        /**
-         * Function: equalPoints
-         *
-         * Compares all mxPoints in the given lists.
-         *
-         * Parameters:
-         *
-         * a - Array of <mxPoints> to be compared.
-         * b - Array of <mxPoints> to be compared.
-         */
-        equalPoints: function (a, b) {
-            if ((a == null && b != null) || (a != null && b == null) ||
-                (a != null && b != null && a.length != b.length)) {
-                return false;
-            } else if (a != null && b != null) {
-                for (var i = 0; i < a.length; i++) {
-                    if ((a[i] != null && b[i] == null) ||
-                        (a[i] == null && b[i] != null) ||
-                        (a[i] != null && b[i] != null &&
-                            (a[i].x != b[i].x || a[i].y != b[i].y))) {
-                        return false;
-                    }
+    /**
+     * Posts the specified params to the given URL *asynchronously* and invokes
+     * the given functions depending on the request status. Returns the
+     * <mxXmlRequest> in use. Both functions take the <mxXmlRequest> as the
+     * only parameter. Make sure to use encodeURIComponent for the parameter
+     * values.
+     *
+     * Example:
+     *
+     * (code)
+     * mxUtils.post(url, 'key=value', function(req)
+     * {
+     * 	mxUtils.alert('Ready: '+req.isReady()+' Status: '+req.getStatus());
+     *  // Process req.getDocumentElement() using DOM API if OK...
+     * });
+     * (end)
+     *
+     * @param url - URL to get the data from.
+     * @param params - Parameters for the post request.
+     * @param onload - Optional function to execute for a successful response.
+     * @param onerror - Optional function to execute on error.
+     */
+    static post(url, params, onload, onerror) {
+        return new MxXmlRequest(url, params).send(onload, onerror);
+    }
+
+    /**
+     * Submits the given parameters to the specified URL using
+     * <mxXmlRequest.simulate> and returns the <mxXmlRequest>.
+     * Make sure to use encodeURIComponent for the parameter
+     * values.
+     *
+     * @param url - URL to get the data from.
+     * @param params - Parameters for the form.
+     * @param doc - Document to create the form in.
+     * @param target - Target to send the form result to.
+     */
+    static submit(url, params, doc, target) {
+        return new MxXmlRequest(url, params).simulate(doc, target);
+    }
+
+    /**
+     * Loads the specified URL *asynchronously* into the specified document,
+     * invoking onload after the document has been loaded. This implementation
+     * does not use <mxXmlRequest>, but the document.load method.
+     *
+     * @param url - URL to get the data from.
+     * @param doc - The document to load the URL into.
+     * @param onload - Function to execute when the URL has been loaded.
+     */
+    static loadInto(url, doc, onload) {
+        if (MxClient.IS_IE) {
+            doc.onreadystatechange = () => {
+                if (doc.readyState == 4) {
+                    onload();
                 }
-            }
-
-            return true;
-        },
-
-        /**
-         * Function: equalEntries
-         *
-         * Returns true if all properties of the given objects are equal. Values
-         * with NaN are equal to NaN and unequal to any other value.
-         *
-         * Parameters:
-         *
-         * a - First object to be compared.
-         * b - Second object to be compared.
-         */
-        equalEntries: function (a, b) {
-            // Counts keys in b to check if all values have been compared
-            var count = 0;
-
-            if ((a == null && b != null) || (a != null && b == null) ||
-                (a != null && b != null && a.length != b.length)) {
-                return false;
-            } else if (a != null && b != null) {
-                for (var key in b) {
-                    count++;
-                }
-
-                for (var key in a) {
-                    count--
-
-                    if ((!mxUtils.isNaN(a[key]) || !mxUtils.isNaN(b[key])) && a[key] != b[key]) {
-                        return false;
-                    }
-                }
-            }
-
-            return count == 0;
-        },
-
-        /**
-         * Function: removeDuplicates
-         *
-         * Removes all duplicates from the given array.
-         */
-        removeDuplicates: function (arr) {
-            var dict = new mxDictionary();
-            var result = [];
-
-            for (var i = 0; i < arr.length; i++) {
-                if (!dict.get(arr[i])) {
-                    result.push(arr[i]);
-                    dict.put(arr[i], true);
-                }
-            }
-
-            return result;
-        },
-
-        /**
-         * Function: isNaN
-         *
-         * Returns true if the given value is of type number and isNaN returns true.
-         */
-        isNaN: function (value) {
-            return typeof (value) == 'number' && isNaN(value);
-        },
-
-        /**
-         * Function: extend
-         *
-         * Assigns a copy of the superclass prototype to the subclass prototype.
-         * Note that this does not call the constructor of the superclass at this
-         * point, the superclass constructor should be called explicitely in the
-         * subclass constructor. Below is an example.
-         *
-         * (code)
-         * MyGraph = function(container, model, renderHint, stylesheet)
-         * {
-         *   mxGraph.call(this, container, model, renderHint, stylesheet);
-         * }
-         *
-         * mxUtils.extend(MyGraph, mxGraph);
-         * (end)
-         *
-         * Parameters:
-         *
-         * ctor - Constructor of the subclass.
-         * superCtor - Constructor of the superclass.
-         */
-        extend: function (ctor, superCtor) {
-            var f = function () {
             };
-            f.prototype = superCtor.prototype;
+        } else {
+            doc.addEventListener('load', onload, false);
+        }
 
-            ctor.prototype = new f();
-            ctor.prototype.constructor = ctor;
-        },
+        doc.load(url);
+    }
 
-        /**
-         * Function: toString
-         *
-         * Returns a textual representation of the specified object.
-         *
-         * Parameters:
-         *
-         * obj - Object to return the string representation for.
-         */
-        toString: function (obj) {
-            var output = '';
+    /**
+     * Returns the value for the given key in the given associative array or
+     * the given default value if the value is null.
+     *
+     * @param array - Associative array that contains the value for the key.
+     * @param key - Key whose value should be returned.
+     * @param defaultValue - Value to be returned if the value for the given
+     * key is null.
+     */
+    static getValue(array, key, defaultValue) {
+        let value = (array != null) ? array[key] : null;
 
-            for (var i in obj) {
-                try {
-                    if (obj[i] == null) {
-                        output += i + ' = [null]\n';
-                    } else if (typeof (obj[i]) == 'function') {
-                        output += i + ' => [Function]\n';
-                    } else if (typeof (obj[i]) == 'object') {
-                        var ctor = mxUtils.getFunctionName(obj[i].constructor);
-                        output += i + ' => [' + ctor + ']\n';
+        if (value == null) {
+            value = defaultValue;
+        }
+
+        return value;
+    }
+
+    /**
+     * Returns the numeric value for the given key in the given associative
+     * array or the given default value (or 0) if the value is null. The value
+     * is converted to a numeric value using the Number function.
+     *
+     * @param array - Associative array that contains the value for the key.
+     * @param key - Key whose value should be returned.
+     * @param defaultValue - Value to be returned if the value for the given
+     * key is null. Default is 0.
+     */
+    static getNumber(array, key, defaultValue) {
+        let value = (array != null) ? array[key] : null;
+
+        if (value == null) {
+            value = defaultValue || 0;
+        }
+
+        return Number(value);
+    }
+
+    /**
+     * Returns the color value for the given key in the given associative
+     * array or the given default value if the value is null. If the value
+     * is <mxConstants.NONE> then null is returned.
+     *
+     * @param array - Associative array that contains the value for the key.
+     * @param key - Key whose value should be returned.
+     * @param defaultValue - Value to be returned if the value for the given
+     * key is null. Default is null.
+     */
+    static getColor(array, key, defaultValue) {
+        let value = (array != null) ? array[key] : null;
+
+        if (value == null) {
+            value = defaultValue;
+        } else if (value == mxConstants.NONE) {
+            value = null;
+        }
+
+        return value;
+    }
+
+    /**
+     * Recursively clones the specified object ignoring all fieldnames in the
+     * given array of transient fields. <mxObjectIdentity.FIELD_NAME> is always
+     * ignored by this function.
+     *
+     * @param obj - Object to be cloned.
+     * @param transients - Optional array of strings representing the fieldname to be
+     * ignored.
+     * @param shallow - Optional boolean argument to specify if a shallow clone should
+     * be created, that is, one where all object references are not cloned or,
+     * in other words, one where only atomic (strings, numbers) values are
+     * cloned. Default is false.
+     */
+    static clone(obj, transients, shallow) {
+        shallow = (shallow != null) ? shallow : false;
+        let clone = null;
+
+        if (obj != null && typeof (obj.constructor) == 'function') {
+            clone = new obj.constructor();
+
+            for (let i in obj) {
+                if (i != MxObjectIdentity.FIELD_NAME && (transients == null ||
+                    MxUtils.indexOf(transients, i) < 0)) {
+                    if (!shallow && typeof (obj[i]) == 'object') {
+                        clone[i] = MxUtils.clone(obj[i]);
                     } else {
-                        output += i + ' = ' + obj[i] + '\n';
+                        clone[i] = obj[i];
                     }
-                } catch (e) {
-                    output += i + '=' + e.message;
                 }
             }
+        }
 
-            return output;
-        },
+        return clone;
+    }
 
-        /**
-         * Function: toRadians
-         *
-         * Converts the given degree to radians.
-         */
-        toRadians: function (deg) {
-            return Math.PI * deg / 180;
-        },
-
-        /**
-         * Function: toDegree
-         *
-         * Converts the given radians to degree.
-         */
-        toDegree: function (rad) {
-            return rad * 180 / Math.PI;
-        },
-
-        /**
-         * Function: arcToCurves
-         *
-         * Converts the given arc to a series of curves.
-         */
-        arcToCurves: function (x0, y0, r1, r2, angle, largeArcFlag, sweepFlag, x, y) {
-            x -= x0;
-            y -= y0;
-
-            if (r1 === 0 || r2 === 0) {
-                return result;
-            }
-
-            var fS = sweepFlag;
-            var psai = angle;
-            r1 = Math.abs(r1);
-            r2 = Math.abs(r2);
-            var ctx = -x / 2;
-            var cty = -y / 2;
-            var cpsi = Math.cos(psai * Math.PI / 180);
-            var spsi = Math.sin(psai * Math.PI / 180);
-            var rxd = cpsi * ctx + spsi * cty;
-            var ryd = -1 * spsi * ctx + cpsi * cty;
-            var rxdd = rxd * rxd;
-            var rydd = ryd * ryd;
-            var r1x = r1 * r1;
-            var r2y = r2 * r2;
-            var lamda = rxdd / r1x + rydd / r2y;
-            var sds;
-
-            if (lamda > 1) {
-                r1 = Math.sqrt(lamda) * r1;
-                r2 = Math.sqrt(lamda) * r2;
-                sds = 0;
-            } else {
-                var seif = 1;
-
-                if (largeArcFlag === fS) {
-                    seif = -1;
+    /**
+     * Compares all mxPoints in the given lists.
+     *
+     * @param a - Array of <mxPoints> to be compared.
+     * @param b - Array of <mxPoints> to be compared.
+     */
+    static equalPoints(a, b) {
+        if ((a == null && b != null) || (a != null && b == null) ||
+            (a != null && b != null && a.length != b.length)) {
+            return false;
+        } else if (a != null && b != null) {
+            for (let i = 0; i < a.length; i++) {
+                if ((a[i] != null && b[i] == null) ||
+                    (a[i] == null && b[i] != null) ||
+                    (a[i] != null && b[i] != null &&
+                        (a[i].x != b[i].x || a[i].y != b[i].y))) {
+                    return false;
                 }
+            }
+        }
 
-                sds = seif * Math.sqrt((r1x * r2y - r1x * rydd - r2y * rxdd) / (r1x * rydd + r2y * rxdd));
+        return true;
+    }
+
+    /**
+     * Returns true if all properties of the given objects are equal. Values
+     * with NaN are equal to NaN and unequal to any other value.
+     *
+     * @param a - First object to be compared.
+     * @param b - Second object to be compared.
+     */
+    static equalEntries(a, b) {
+        // Counts keys in b to check if all values have been compared
+        let count = 0;
+
+        if ((a == null && b != null) || (a != null && b == null) ||
+            (a != null && b != null && a.length != b.length)) {
+            return false;
+        } else if (a != null && b != null) {
+            for (let key in b) {
+                count++;
             }
 
-            var txd = sds * r1 * ryd / r2;
-            var tyd = -1 * sds * r2 * rxd / r1;
-            var tx = cpsi * txd - spsi * tyd + x / 2;
-            var ty = spsi * txd + cpsi * tyd + y / 2;
-            var rad = Math.atan2((ryd - tyd) / r2, (rxd - txd) / r1) - Math.atan2(0, 1);
-            var s1 = (rad >= 0) ? rad : 2 * Math.PI + rad;
-            rad = Math.atan2((-ryd - tyd) / r2, (-rxd - txd) / r1) - Math.atan2((ryd - tyd) / r2, (rxd - txd) / r1);
-            var dr = (rad >= 0) ? rad : 2 * Math.PI + rad;
+            for (let key in a) {
+                count--
 
-            if (fS == 0 && dr > 0) {
-                dr -= 2 * Math.PI;
-            } else if (fS != 0 && dr < 0) {
-                dr += 2 * Math.PI;
+                if ((!MxUtils.isNaN(a[key]) || !MxUtils.isNaN(b[key])) && a[key] != b[key]) {
+                    return false;
+                }
             }
+        }
 
-            var sse = dr * 2 / Math.PI;
-            var seg = Math.ceil(sse < 0 ? -1 * sse : sse);
-            var segr = dr / seg;
-            var t = 8 / 3 * Math.sin(segr / 4) * Math.sin(segr / 4) / Math.sin(segr / 2);
-            var cpsir1 = cpsi * r1;
-            var cpsir2 = cpsi * r2;
-            var spsir1 = spsi * r1;
-            var spsir2 = spsi * r2;
-            var mc = Math.cos(s1);
-            var ms = Math.sin(s1);
-            var x2 = -t * (cpsir1 * ms + spsir2 * mc);
-            var y2 = -t * (spsir1 * ms - cpsir2 * mc);
-            var x3 = 0;
-            var y3 = 0;
+        return count == 0;
+    }
 
-            var result = [];
+    /**
+     * Removes all duplicates from the given array.
+     * @param arr {array}
+     */
+    static removeDuplicates(arr) {
+        let dict = new MxDictionary();
+        let result = [];
 
-            for (var n = 0; n < seg; ++n) {
-                s1 += segr;
-                mc = Math.cos(s1);
-                ms = Math.sin(s1);
-
-                x3 = cpsir1 * mc - spsir2 * ms + tx;
-                y3 = spsir1 * mc + cpsir2 * ms + ty;
-                var dx = -t * (cpsir1 * ms + spsir2 * mc);
-                var dy = -t * (spsir1 * ms - cpsir2 * mc);
-
-                // CurveTo updates x0, y0 so need to restore it
-                var index = n * 6;
-                result[index] = Number(x2 + x0);
-                result[index + 1] = Number(y2 + y0);
-                result[index + 2] = Number(x3 - dx + x0);
-                result[index + 3] = Number(y3 - dy + y0);
-                result[index + 4] = Number(x3 + x0);
-                result[index + 5] = Number(y3 + y0);
-
-                x2 = x3 + dx;
-                y2 = y3 + dy;
+        for (let i = 0; i < arr.length; i++) {
+            if (!dict.get(arr[i])) {
+                result.push(arr[i]);
+                dict.put(arr[i], true);
             }
+        }
 
+        return result;
+    }
+
+    /**
+     * Returns true if the given value is of type number and isNaN returns true.
+     * @param value
+     */
+    static isNaN(value) {
+        return typeof (value) == 'number' && isNaN(value);
+    }
+
+    /**
+     * Assigns a copy of the superclass prototype to the subclass prototype.
+     * Note that this does not call the constructor of the superclass at this
+     * point, the superclass constructor should be called explicitely in the
+     * subclass constructor. Below is an example.
+     *
+     * (code)
+     * MyGraph = function(container, model, renderHint, stylesheet)
+     * {
+     *   mxGraph.call(this, container, model, renderHint, stylesheet);
+     * }
+     *
+     * mxUtils.extend(MyGraph, mxGraph);
+     * (end)
+     *
+     * @param ctor - Constructor of the subclass.
+     * @param superCtor - Constructor of the superclass.
+     */
+    static extend(ctor, superCtor) {
+        let f = function () {
+        };
+        f.prototype = superCtor.prototype;
+
+        ctor.prototype = new f();
+        ctor.prototype.constructor = ctor;
+    }
+
+    /**
+     * Returns a textual representation of the specified object.
+     *
+     * @param obj - Object to return the string representation for.
+     */
+    static toString(obj) {
+        let output = '';
+
+        for (let i in obj) {
+            try {
+                if (obj[i] == null) {
+                    output += i + ' = [null]\n';
+                } else if (typeof (obj[i]) == 'function') {
+                    output += i + ' => [Function]\n';
+                } else if (typeof (obj[i]) == 'object') {
+                    var ctor = mxUtils.getFunctionName(obj[i].constructor);
+                    output += i + ' => [' + ctor + ']\n';
+                } else {
+                    output += i + ' = ' + obj[i] + '\n';
+                }
+            } catch (e) {
+                output += i + '=' + e.message;
+            }
+        }
+
+        return output;
+    }
+
+    /**
+     * Converts the given degree to radians.
+     * @param deg {number}
+     */
+    static toRadians(deg) {
+        return Math.PI * deg / 180;
+    }
+
+    /**
+     * Converts the given radians to degree.
+     * @param rad {number}
+     */
+    static toDegree(rad) {
+        return rad * 180 / Math.PI;
+    }
+
+    /**
+     * Converts the given arc to a series of curves.
+     *
+     * @param x0
+     * @param y0
+     * @param r1
+     * @param r2
+     * @param angle
+     * @param largeArcFlag
+     * @param sweepFlag
+     * @param x
+     * @param y
+     * @return {*[]}
+     */
+    static arcToCurves(x0, y0, r1, r2, angle, largeArcFlag, sweepFlag, x, y) {
+        x -= x0;
+        y -= y0;
+
+        if (r1 === 0 || r2 === 0) {
             return result;
-        },
+        }
 
-        /**
-         * Function: getBoundingBox
-         *
-         * Returns the bounding box for the rotated rectangle.
-         *
-         * Parameters:
-         *
-         * rect - <mxRectangle> to be rotated.
-         * angle - Number that represents the angle (in degrees).
-         * cx - Optional <mxPoint> that represents the rotation center. If no
-         * rotation center is given then the center of rect is used.
-         */
-        getBoundingBox: function (rect, rotation, cx) {
-            var result = null;
+        let fS = sweepFlag;
+        let psai = angle;
+        r1 = Math.abs(r1);
+        r2 = Math.abs(r2);
+        let ctx = -x / 2;
+        let cty = -y / 2;
+        let cpsi = Math.cos(psai * Math.PI / 180);
+        let spsi = Math.sin(psai * Math.PI / 180);
+        let rxd = cpsi * ctx + spsi * cty;
+        let ryd = -1 * spsi * ctx + cpsi * cty;
+        let rxdd = rxd * rxd;
+        let rydd = ryd * ryd;
+        let r1x = r1 * r1;
+        let r2y = r2 * r2;
+        let lamda = rxdd / r1x + rydd / r2y;
+        let sds;
 
-            if (rect != null && rotation != null && rotation != 0) {
-                var rad = mxUtils.toRadians(rotation);
-                var cos = Math.cos(rad);
-                var sin = Math.sin(rad);
+        if (lamda > 1) {
+            r1 = Math.sqrt(lamda) * r1;
+            r2 = Math.sqrt(lamda) * r2;
+            sds = 0;
+        } else {
+            let seif = 1;
 
-                cx = (cx != null) ? cx : new mxPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
-
-                var p1 = new mxPoint(rect.x, rect.y);
-                var p2 = new mxPoint(rect.x + rect.width, rect.y);
-                var p3 = new mxPoint(p2.x, rect.y + rect.height);
-                var p4 = new mxPoint(rect.x, p3.y);
-
-                p1 = mxUtils.getRotatedPoint(p1, cos, sin, cx);
-                p2 = mxUtils.getRotatedPoint(p2, cos, sin, cx);
-                p3 = mxUtils.getRotatedPoint(p3, cos, sin, cx);
-                p4 = mxUtils.getRotatedPoint(p4, cos, sin, cx);
-
-                result = new mxRectangle(p1.x, p1.y, 0, 0);
-                result.add(new mxRectangle(p2.x, p2.y, 0, 0));
-                result.add(new mxRectangle(p3.x, p3.y, 0, 0));
-                result.add(new mxRectangle(p4.x, p4.y, 0, 0));
+            if (largeArcFlag === fS) {
+                seif = -1;
             }
 
-            return result;
-        },
+            sds = seif * Math.sqrt((r1x * r2y - r1x * rydd - r2y * rxdd) / (r1x * rydd + r2y * rxdd));
+        }
 
-        /**
-         * Function: getRotatedPoint
-         *
-         * Rotates the given point by the given cos and sin.
-         */
-        getRotatedPoint: function (pt, cos, sin, c) {
-            c = (c != null) ? c : new mxPoint();
-            var x = pt.x - c.x;
-            var y = pt.y - c.y;
+        let txd = sds * r1 * ryd / r2;
+        let tyd = -1 * sds * r2 * rxd / r1;
+        let tx = cpsi * txd - spsi * tyd + x / 2;
+        let ty = spsi * txd + cpsi * tyd + y / 2;
+        let rad = Math.atan2((ryd - tyd) / r2, (rxd - txd) / r1) - Math.atan2(0, 1);
+        let s1 = (rad >= 0) ? rad : 2 * Math.PI + rad;
+        rad = Math.atan2((-ryd - tyd) / r2, (-rxd - txd) / r1) - Math.atan2((ryd - tyd) / r2, (rxd - txd) / r1);
+        let dr = (rad >= 0) ? rad : 2 * Math.PI + rad;
 
-            var x1 = x * cos - y * sin;
-            var y1 = y * cos + x * sin;
+        if (fS == 0 && dr > 0) {
+            dr -= 2 * Math.PI;
+        } else if (fS != 0 && dr < 0) {
+            dr += 2 * Math.PI;
+        }
 
-            return new mxPoint(x1 + c.x, y1 + c.y);
-        },
+        let sse = dr * 2 / Math.PI;
+        let seg = Math.ceil(sse < 0 ? -1 * sse : sse);
+        let segr = dr / seg;
+        let t = 8 / 3 * Math.sin(segr / 4) * Math.sin(segr / 4) / Math.sin(segr / 2);
+        let cpsir1 = cpsi * r1;
+        let cpsir2 = cpsi * r2;
+        let spsir1 = spsi * r1;
+        let spsir2 = spsi * r2;
+        let mc = Math.cos(s1);
+        let ms = Math.sin(s1);
+        let x2 = -t * (cpsir1 * ms + spsir2 * mc);
+        let y2 = -t * (spsir1 * ms - cpsir2 * mc);
+        let x3 = 0;
+        let y3 = 0;
 
-        /**
-         * Returns an integer mask of the port constraints of the given map
-         * @param dict the style map to determine the port constraints for
-         * @param defaultValue Default value to return if the key is undefined.
-         * @return the mask of port constraint directions
-         *
-         * Parameters:
-         *
-         * terminal - <mxCelState> that represents the terminal.
-         * edge - <mxCellState> that represents the edge.
-         * source - Boolean that specifies if the terminal is the source terminal.
-         * defaultValue - Default value to be returned.
-         */
-        getPortConstraints: function (terminal, edge, source, defaultValue) {
-            var value = mxUtils.getValue(terminal.style, mxConstants.STYLE_PORT_CONSTRAINT,
-                mxUtils.getValue(edge.style, (source) ? mxConstants.STYLE_SOURCE_PORT_CONSTRAINT :
-                    mxConstants.STYLE_TARGET_PORT_CONSTRAINT, null));
+        let result = [];
 
-            if (value == null) {
-                return defaultValue;
-            } else {
-                var directions = value.toString();
-                var returnValue = mxConstants.DIRECTION_MASK_NONE;
-                var constraintRotationEnabled = mxUtils.getValue(terminal.style, mxConstants.STYLE_PORT_CONSTRAINT_ROTATION, 0);
-                var rotation = 0;
+        for (let n = 0; n < seg; ++n) {
+            s1 += segr;
+            mc = Math.cos(s1);
+            ms = Math.sin(s1);
 
-                if (constraintRotationEnabled == 1) {
-                    rotation = mxUtils.getValue(terminal.style, mxConstants.STYLE_ROTATION, 0);
-                }
+            x3 = cpsir1 * mc - spsir2 * ms + tx;
+            y3 = spsir1 * mc + cpsir2 * ms + ty;
+            let dx = -t * (cpsir1 * ms + spsir2 * mc);
+            let dy = -t * (spsir1 * ms - cpsir2 * mc);
 
-                var quad = 0;
+            // CurveTo updates x0, y0 so need to restore it
+            let index = n * 6;
+            result[index] = Number(x2 + x0);
+            result[index + 1] = Number(y2 + y0);
+            result[index + 2] = Number(x3 - dx + x0);
+            result[index + 3] = Number(y3 - dy + y0);
+            result[index + 4] = Number(x3 + x0);
+            result[index + 5] = Number(y3 + y0);
 
-                if (rotation > 45) {
-                    quad = 1;
+            x2 = x3 + dx;
+            y2 = y3 + dy;
+        }
 
-                    if (rotation >= 135) {
-                        quad = 2;
-                    }
-                } else if (rotation < -45) {
-                    quad = 3;
+        return result;
+    }
 
-                    if (rotation <= -135) {
-                        quad = 2;
-                    }
-                }
+    /**
+     * Returns the bounding box for the rotated rectangle.
+     *
+     * @param rect - <mxRectangle> to be rotated.
+     * @param angle - Number that represents the angle (in degrees).
+     * @param cx - Optional <mxPoint> that represents the rotation center. If no
+     * @param rotation center is given then the center of rect is used.
+     */
+    static getBoundingBox(rect, rotation, cx) {
+        let result = null;
 
-                if (directions.indexOf(mxConstants.DIRECTION_NORTH) >= 0) {
-                    switch (quad) {
-                        case 0:
-                            returnValue |= mxConstants.DIRECTION_MASK_NORTH;
-                            break;
-                        case 1:
-                            returnValue |= mxConstants.DIRECTION_MASK_EAST;
-                            break;
-                        case 2:
-                            returnValue |= mxConstants.DIRECTION_MASK_SOUTH;
-                            break;
-                        case 3:
-                            returnValue |= mxConstants.DIRECTION_MASK_WEST;
-                            break;
-                    }
-                }
-                if (directions.indexOf(mxConstants.DIRECTION_WEST) >= 0) {
-                    switch (quad) {
-                        case 0:
-                            returnValue |= mxConstants.DIRECTION_MASK_WEST;
-                            break;
-                        case 1:
-                            returnValue |= mxConstants.DIRECTION_MASK_NORTH;
-                            break;
-                        case 2:
-                            returnValue |= mxConstants.DIRECTION_MASK_EAST;
-                            break;
-                        case 3:
-                            returnValue |= mxConstants.DIRECTION_MASK_SOUTH;
-                            break;
-                    }
-                }
-                if (directions.indexOf(mxConstants.DIRECTION_SOUTH) >= 0) {
-                    switch (quad) {
-                        case 0:
-                            returnValue |= mxConstants.DIRECTION_MASK_SOUTH;
-                            break;
-                        case 1:
-                            returnValue |= mxConstants.DIRECTION_MASK_WEST;
-                            break;
-                        case 2:
-                            returnValue |= mxConstants.DIRECTION_MASK_NORTH;
-                            break;
-                        case 3:
-                            returnValue |= mxConstants.DIRECTION_MASK_EAST;
-                            break;
-                    }
-                }
-                if (directions.indexOf(mxConstants.DIRECTION_EAST) >= 0) {
-                    switch (quad) {
-                        case 0:
-                            returnValue |= mxConstants.DIRECTION_MASK_EAST;
-                            break;
-                        case 1:
-                            returnValue |= mxConstants.DIRECTION_MASK_SOUTH;
-                            break;
-                        case 2:
-                            returnValue |= mxConstants.DIRECTION_MASK_WEST;
-                            break;
-                        case 3:
-                            returnValue |= mxConstants.DIRECTION_MASK_NORTH;
-                            break;
-                    }
-                }
+        if (rect != null && rotation != null && rotation != 0) {
+            let rad = MxUtils.toRadians(rotation);
+            let cos = Math.cos(rad);
+            let sin = Math.sin(rad);
 
-                return returnValue;
+            cx = (cx != null) ? cx : new MxPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+
+            let p1 = new MxPoint(rect.x, rect.y);
+            let p2 = new MxPoint(rect.x + rect.width, rect.y);
+            let p3 = new MxPoint(p2.x, rect.y + rect.height);
+            let p4 = new MxPoint(rect.x, p3.y);
+
+            p1 = MxUtils.getRotatedPoint(p1, cos, sin, cx);
+            p2 = MxUtils.getRotatedPoint(p2, cos, sin, cx);
+            p3 = MxUtils.getRotatedPoint(p3, cos, sin, cx);
+            p4 = MxUtils.getRotatedPoint(p4, cos, sin, cx);
+
+            result = new MxRectangle(p1.x, p1.y, 0, 0);
+            result.add(new MxRectangle(p2.x, p2.y, 0, 0));
+            result.add(new MxRectangle(p3.x, p3.y, 0, 0));
+            result.add(new MxRectangle(p4.x, p4.y, 0, 0));
+        }
+
+        return result;
+    }
+
+    /**
+     * Rotates the given point by the given cos and sin.
+     */
+    static getRotatedPoint(pt, cos, sin, c) {
+        c = (c != null) ? c : new MxPoint();
+        let x = pt.x - c.x;
+        let y = pt.y - c.y;
+
+        let x1 = x * cos - y * sin;
+        let y1 = y * cos + x * sin;
+
+        return new MxPoint(x1 + c.x, y1 + c.y);
+    }
+
+    /**
+     * Returns an integer mask of the port constraints of the given map
+     *
+     * @param terminal - <mxCelState> that represents the terminal.
+     * @param edge - <mxCellState> that represents the edge.
+     * @param source - Boolean that specifies if the terminal is the source terminal.
+     * @param defaultValue - Default value to return if the key is undefined.
+     * @return the mask of port constraint directions
+     */
+    static getPortConstraints(terminal, edge, source, defaultValue) {
+        let value = MxUtils.getValue(terminal.style, MxConstants.STYLE_PORT_CONSTRAINT,
+            MxUtils.getValue(edge.style, (source) ? MxConstants.STYLE_SOURCE_PORT_CONSTRAINT :
+                MxConstants.STYLE_TARGET_PORT_CONSTRAINT, null));
+
+        if (value == null) {
+            return defaultValue;
+        } else {
+            let directions = value.toString();
+            let returnValue = MxConstants.DIRECTION_MASK_NONE;
+            let constraintRotationEnabled = MxUtils.getValue(terminal.style, MxConstants.STYLE_PORT_CONSTRAINT_ROTATION, 0);
+            let rotation = 0;
+
+            if (constraintRotationEnabled == 1) {
+                rotation = MxUtils.getValue(terminal.style, MxConstants.STYLE_ROTATION, 0);
             }
-        },
 
-        /**
-         * Function: reversePortConstraints
-         *
-         * Reverse the port constraint bitmask. For example, north | east
-         * becomes south | west
-         */
-        reversePortConstraints: function (constraint) {
-            var result = 0;
+            let quad = 0;
 
-            result = (constraint & mxConstants.DIRECTION_MASK_WEST) << 3;
-            result |= (constraint & mxConstants.DIRECTION_MASK_NORTH) << 1;
-            result |= (constraint & mxConstants.DIRECTION_MASK_SOUTH) >> 1;
-            result |= (constraint & mxConstants.DIRECTION_MASK_EAST) >> 3;
+            if (rotation > 45) {
+                quad = 1;
 
-            return result;
-        },
+                if (rotation >= 135) {
+                    quad = 2;
+                }
+            } else if (rotation < -45) {
+                quad = 3;
 
-        /**
-         * Function: findNearestSegment
-         *
-         * Finds the index of the nearest segment on the given cell state for
-         * the specified coordinate pair.
-         */
-        findNearestSegment: function (state, x, y) {
-            var index = -1;
-
-            if (state.absolutePoints.length > 0) {
-                var last = state.absolutePoints[0];
-                var min = null;
-
-                for (var i = 1; i < state.absolutePoints.length; i++) {
-                    var current = state.absolutePoints[i];
-                    var dist = mxUtils.ptSegDistSq(last.x, last.y,
-                        current.x, current.y, x, y);
-
-                    if (min == null || dist < min) {
-                        min = dist;
-                        index = i - 1;
-                    }
-
-                    last = current;
+                if (rotation <= -135) {
+                    quad = 2;
                 }
             }
 
-            return index;
-        },
-
-        /**
-         * Function: getDirectedBounds
-         *
-         * Adds the given margins to the given rectangle and rotates and flips the
-         * rectangle according to the respective styles in style.
-         */
-        getDirectedBounds: function (rect, m, style, flipH, flipV) {
-            var d = mxUtils.getValue(style, mxConstants.STYLE_DIRECTION, mxConstants.DIRECTION_EAST);
-            flipH = (flipH != null) ? flipH : mxUtils.getValue(style, mxConstants.STYLE_FLIPH, false);
-            flipV = (flipV != null) ? flipV : mxUtils.getValue(style, mxConstants.STYLE_FLIPV, false);
-
-            m.x = Math.round(Math.max(0, Math.min(rect.width, m.x)));
-            m.y = Math.round(Math.max(0, Math.min(rect.height, m.y)));
-            m.width = Math.round(Math.max(0, Math.min(rect.width, m.width)));
-            m.height = Math.round(Math.max(0, Math.min(rect.height, m.height)));
-
-            if ((flipV && (d == mxConstants.DIRECTION_SOUTH || d == mxConstants.DIRECTION_NORTH)) ||
-                (flipH && (d == mxConstants.DIRECTION_EAST || d == mxConstants.DIRECTION_WEST))) {
-                var tmp = m.x;
-                m.x = m.width;
-                m.width = tmp;
+            if (directions.indexOf(MxConstants.DIRECTION_NORTH) >= 0) {
+                switch (quad) {
+                    case 0:
+                        returnValue |= MxConstants.DIRECTION_MASK_NORTH;
+                        break;
+                    case 1:
+                        returnValue |= MxConstants.DIRECTION_MASK_EAST;
+                        break;
+                    case 2:
+                        returnValue |= MxConstants.DIRECTION_MASK_SOUTH;
+                        break;
+                    case 3:
+                        returnValue |= MxConstants.DIRECTION_MASK_WEST;
+                        break;
+                }
             }
-
-            if ((flipH && (d == mxConstants.DIRECTION_SOUTH || d == mxConstants.DIRECTION_NORTH)) ||
-                (flipV && (d == mxConstants.DIRECTION_EAST || d == mxConstants.DIRECTION_WEST))) {
-                var tmp = m.y;
-                m.y = m.height;
-                m.height = tmp;
+            if (directions.indexOf(MxConstants.DIRECTION_WEST) >= 0) {
+                switch (quad) {
+                    case 0:
+                        returnValue |= MxConstants.DIRECTION_MASK_WEST;
+                        break;
+                    case 1:
+                        returnValue |= MxConstants.DIRECTION_MASK_NORTH;
+                        break;
+                    case 2:
+                        returnValue |= MxConstants.DIRECTION_MASK_EAST;
+                        break;
+                    case 3:
+                        returnValue |= MxConstants.DIRECTION_MASK_SOUTH;
+                        break;
+                }
             }
-
-            var m2 = mxRectangle.fromRectangle(m);
-
-            if (d == mxConstants.DIRECTION_SOUTH) {
-                m2.y = m.x;
-                m2.x = m.height;
-                m2.width = m.y;
-                m2.height = m.width;
-            } else if (d == mxConstants.DIRECTION_WEST) {
-                m2.y = m.height;
-                m2.x = m.width;
-                m2.width = m.x;
-                m2.height = m.y;
-            } else if (d == mxConstants.DIRECTION_NORTH) {
-                m2.y = m.width;
-                m2.x = m.y;
-                m2.width = m.height;
-                m2.height = m.x;
+            if (directions.indexOf(MxConstants.DIRECTION_SOUTH) >= 0) {
+                switch (quad) {
+                    case 0:
+                        returnValue |= MxConstants.DIRECTION_MASK_SOUTH;
+                        break;
+                    case 1:
+                        returnValue |= MxConstants.DIRECTION_MASK_WEST;
+                        break;
+                    case 2:
+                        returnValue |= MxConstants.DIRECTION_MASK_NORTH;
+                        break;
+                    case 3:
+                        returnValue |= MxConstants.DIRECTION_MASK_EAST;
+                        break;
+                }
             }
-
-            return new mxRectangle(rect.x + m2.x, rect.y + m2.y, rect.width - m2.width - m2.x, rect.height - m2.height - m2.y);
-        },
-
-        /**
-         * Function: getPerimeterPoint
-         *
-         * Returns the intersection between the polygon defined by the array of
-         * points and the line between center and point.
-         */
-        getPerimeterPoint: function (pts, center, point) {
-            var min = null;
-
-            for (var i = 0; i < pts.length - 1; i++) {
-                var pt = mxUtils.intersection(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y,
-                    center.x, center.y, point.x, point.y);
-
-                if (pt != null) {
-                    var dx = point.x - pt.x;
-                    var dy = point.y - pt.y;
-                    var ip = {p: pt, distSq: dy * dy + dx * dx};
-
-                    if (ip != null && (min == null || min.distSq > ip.distSq)) {
-                        min = ip;
-                    }
+            if (directions.indexOf(MxConstants.DIRECTION_EAST) >= 0) {
+                switch (quad) {
+                    case 0:
+                        returnValue |= MxConstants.DIRECTION_MASK_EAST;
+                        break;
+                    case 1:
+                        returnValue |= MxConstants.DIRECTION_MASK_SOUTH;
+                        break;
+                    case 2:
+                        returnValue |= MxConstants.DIRECTION_MASK_WEST;
+                        break;
+                    case 3:
+                        returnValue |= MxConstants.DIRECTION_MASK_NORTH;
+                        break;
                 }
             }
 
-            return (min != null) ? min.p : null;
-        },
+            return returnValue;
+        }
+    }
+
+    /**
+     * Reverse the port constraint bitmask. For example, north | east
+     * becomes south | west
+     * @param constraint
+     */
+    static reversePortConstraints(constraint) {
+        let result = 0;
+
+        result = (constraint & MxConstants.DIRECTION_MASK_WEST) << 3;
+        result |= (constraint & MxConstants.DIRECTION_MASK_NORTH) << 1;
+        result |= (constraint & MxConstants.DIRECTION_MASK_SOUTH) >> 1;
+        result |= (constraint & MxConstants.DIRECTION_MASK_EAST) >> 3;
+
+        return result;
+    }
+
+    /**
+     * Finds the index of the nearest segment on the given cell state for
+     * the specified coordinate pair.
+     * @param state
+     * @param x
+     * @param y
+     * @return {number}
+     */
+    static findNearestSegment(state, x, y) {
+        let index = -1;
+
+        if (state.absolutePoints.length > 0) {
+            let last = state.absolutePoints[0];
+            let min = null;
+
+            for (let i = 1; i < state.absolutePoints.length; i++) {
+                let current = state.absolutePoints[i];
+                let dist = MxUtils.ptSegDistSq(last.x, last.y,
+                    current.x, current.y, x, y);
+
+                if (min == null || dist < min) {
+                    min = dist;
+                    index = i - 1;
+                }
+
+                last = current;
+            }
+        }
+
+        return index;
+    }
+
+    /**
+     * Adds the given margins to the given rectangle and rotates and flips the
+     * rectangle according to the respective styles in style.
+     * @param rect
+     * @param m
+     * @param style
+     * @param flipH
+     * @param flipV
+     * @return {MxRectangle}
+     */
+    static getDirectedBounds(rect, m, style, flipH, flipV) {
+        let d = MxUtils.getValue(style, MxConstants.STYLE_DIRECTION, MxConstants.DIRECTION_EAST);
+        flipH = (flipH != null) ? flipH : MxUtils.getValue(style, MxConstants.STYLE_FLIPH, false);
+        flipV = (flipV != null) ? flipV : MxUtils.getValue(style, MxConstants.STYLE_FLIPV, false);
+
+        m.x = Math.round(Math.max(0, Math.min(rect.width, m.x)));
+        m.y = Math.round(Math.max(0, Math.min(rect.height, m.y)));
+        m.width = Math.round(Math.max(0, Math.min(rect.width, m.width)));
+        m.height = Math.round(Math.max(0, Math.min(rect.height, m.height)));
+
+        if ((flipV && (d == MxConstants.DIRECTION_SOUTH || d == MxConstants.DIRECTION_NORTH)) ||
+            (flipH && (d == MxConstants.DIRECTION_EAST || d == MxConstants.DIRECTION_WEST))) {
+            let tmp = m.x;
+            m.x = m.width;
+            m.width = tmp;
+        }
+
+        if ((flipH && (d == MxConstants.DIRECTION_SOUTH || d == MxConstants.DIRECTION_NORTH)) ||
+            (flipV && (d == MxConstants.DIRECTION_EAST || d == MxConstants.DIRECTION_WEST))) {
+            let tmp = m.y;
+            m.y = m.height;
+            m.height = tmp;
+        }
+
+        let m2 = MxRectangle.fromRectangle(m);
+
+        if (d == MxConstants.DIRECTION_SOUTH) {
+            m2.y = m.x;
+            m2.x = m.height;
+            m2.width = m.y;
+            m2.height = m.width;
+        } else if (d == MxConstants.DIRECTION_WEST) {
+            m2.y = m.height;
+            m2.x = m.width;
+            m2.width = m.x;
+            m2.height = m.y;
+        } else if (d == MxConstants.DIRECTION_NORTH) {
+            m2.y = m.width;
+            m2.x = m.y;
+            m2.width = m.height;
+            m2.height = m.x;
+        }
+
+        return new MxRectangle(rect.x + m2.x, rect.y + m2.y, rect.width - m2.width - m2.x, rect.height - m2.height - m2.y);
+    }
+
+    /**
+     *  Returns the intersection between the polygon defined by the array of
+     * points and the line between center and point.
+     * @param pts
+     * @param center
+     * @param point
+     * @return {*|null}
+     */
+    static getPerimeterPoint(pts, center, point) {
+        let min = null;
+
+        for (let i = 0; i < pts.length - 1; i++) {
+            let pt = MxUtils.intersection(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y,
+                center.x, center.y, point.x, point.y);
+
+            if (pt != null) {
+                let dx = point.x - pt.x;
+                let dy = point.y - pt.y;
+                let ip = {p: pt, distSq: dy * dy + dx * dx};
+
+                if (ip != null && (min == null || min.distSq > ip.distSq)) {
+                    min = ip;
+                }
+            }
+        }
+
+        return (min != null) ? min.p : null;
+    }
 
         /**
          * Function: rectangleIntersectsSegment
