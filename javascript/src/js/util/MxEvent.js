@@ -1,6 +1,8 @@
 import {MxClient} from "../MxClient";
 import {MxMouseEvent} from "./MxMouseEvent";
+import {MxUtils} from "./MxUtils";
 
+// noinspection SpellCheckingInspection
 /**
  * Class: mxEvent
  *
@@ -40,7 +42,7 @@ export class MxEvent {
 			let supportsPassive = false;
 			
 			try {
-				document.addEventListener('test', function() {}, Object.defineProperty &&
+				document.addEventListener('test', () => {}, Object.defineProperty &&
 					Object.defineProperty({}, 'passive', {get: function()
 					{supportsPassive = true;}}));
 			}
@@ -52,6 +54,7 @@ export class MxEvent {
 
 		}
 		else {
+			// noinspection JSUnresolvedFunction
 			element.attachEvent('on' + eventName, funct);
 			MxEvent._updateListenerList(element, eventName, funct);
 		}
@@ -64,13 +67,13 @@ export class MxEvent {
 			for (let i = 0; i < listenerCount; i++) {
 				let entry = element.mxListenerList[i];
 
-				if (entry.f == funct) {
+				if (entry.f === funct) {
 					element.mxListenerList.splice(i, 1);
 					break;
 				}
 			}
 
-			if (element.mxListenerList.length == 0) {
+			if (element.mxListenerList.length === 0) {
 				element.mxListenerList = null;
 			}
 		}
@@ -85,7 +88,8 @@ export class MxEvent {
 				element.removeEventListener(eventName, funct, false);
 				MxEvent._updateListener(element, eventName, funct);
 		} else {
-				element.detachEvent('on' + eventName, funct);
+				// noinspection JSUnresolvedFunction
+			element.detachEvent('on' + eventName, funct);
 			MxEvent._updateListener(element, eventName, funct);
 		}
 	}
@@ -171,7 +175,7 @@ export class MxEvent {
 			}
 			
 			if (endListener != null) {
-				mxEvent.removeListener(node, 'touchend', endListener);
+				MxEvent.removeListener(node, 'touchend', endListener);
 			}
 		}
 	}
@@ -227,47 +231,31 @@ export class MxEvent {
 			}
 		});
 	}
-
-	//TODO continue refactoring here
 	/**
-	 * Function: release
-	 * 
 	 * Removes the known listeners from the given DOM node and its descendants.
-	 * 
-	 * Parameters:
-	 * 
-	 * element - DOM node to remove the listeners from.
+	 *
+	 * @param element - DOM node to remove the listeners from.
 	 */
-	release: function(element)
-	{
-		try
-		{
-			if (element != null)
-			{
-				mxEvent.removeAllListeners(element);
-				
-				var children = element.childNodes;
-				
-				if (children != null)
-				{
-			        var childCount = children.length;
-			        
-			        for (var i = 0; i < childCount; i += 1)
-			        {
-			        	mxEvent.release(children[i]);
+	static release(element){
+		try {
+			if (element != null) {
+				MxEvent.removeAllListeners(element);
+				let children = element.childNodes;
+				if (children != null) {
+			        let childCount = children.length;
+
+			        for (let i = 0; i < childCount; i += 1) {
+			        	MxEvent.release(children[i]);
 			        }
 			    }
 			}
 		}
-		catch (e)
-		{
+		catch (e) {
 			// ignores errors as this is typically called in cleanup code
 		}
-	},
+	}
 
 	/**
-	 * Function: addMouseWheelListener
-	 * 
 	 * Installs the given function as a handler for mouse wheel events. The
 	 * function has two arguments: the mouse event and a boolean that specifies
 	 * if the wheel was moved up or down.
@@ -278,115 +266,96 @@ export class MxEvent {
 	 * Example:
 	 * 
 	 * (code)
-	 * mxEvent.addMouseWheelListener(function (evt, up, pinch)
+	 * MxEvent.addMouseWheelListener(function (evt, up, pinch)
 	 * {
-	 *   mxLog.show();
-	 *   mxLog.debug('mouseWheel: up='+up);
+	 *   MxLog.show();
+	 *   MxLog.debug('mouseWheel: up='+up);
 	 * });
 	 *(end)
 	 * 
 	 * Parameters:
 	 * 
-	 * funct - Handler function that takes the event argument, a boolean argument
+	 * @param funct - Handler function that takes the event argument, a boolean argument
 	 * for the mousewheel direction and a boolean to specify if the underlying
 	 * event was a pinch gesture on a touch device.
-	 * target - Target for installing the listener in Google Chrome. See 
+	 * @param target - Target for installing the listener in Google Chrome. See
 	 * https://www.chromestatus.com/features/6662647093133312.
 	 */
-	addMouseWheelListener: function(funct, target)
-	{
-		if (funct != null)
-		{
-			var wheelHandler = function(evt)
-			{
+	static addMouseWheelListener(funct, target) {
+		if (funct != null) {
+			let wheelHandler = (evt) => {
 				// IE does not give an event object but the
 				// global event object is the mousewheel event
 				// at this point in time.
-				if (evt == null)
-				{
+				if (evt == null) {
+					// noinspection JSDeprecatedSymbols
 					evt = window.event;
 				}
 			
 				//To prevent window zoom on trackpad pinch
-				if (evt.ctrlKey) 
-				{
+				if (evt.ctrlKey) {
 					evt.preventDefault();
 				}
 
 				// Handles the event using the given function
-				if (Math.abs(evt.deltaX) > 0.5 || Math.abs(evt.deltaY) > 0.5)
-				{
-					funct(evt, (evt.deltaY == 0) ?  -evt.deltaX > 0 : -evt.deltaY > 0);
+				if (Math.abs(evt.deltaX) > 0.5 || Math.abs(evt.deltaY) > 0.5) {
+					funct(evt, (evt.deltaY === 0) ?  -evt.deltaX > 0 : -evt.deltaY > 0);
 				}
 			};
 	
 			target = target != null ? target : window;
 					
-			if (mxClient.IS_SF && !mxClient.IS_TOUCH)
-			{
-				var scale = 1;
+			if (MxClient.IS_SF && !MxClient.IS_TOUCH) {
+				let scale = 1;
 				
-				mxEvent.addListener(target, 'gesturestart', function(evt)
-				{
-					mxEvent.consume(evt);
+				MxEvent.addListener(target, 'gesturestart', (evt) => {
+					MxEvent.consume(evt);
 					scale = 1;
 				});
 				
-				mxEvent.addListener(target, 'gesturechange', function(evt)
-				{
-					mxEvent.consume(evt);
-					var diff = scale - evt.scale;
+				MxEvent.addListener(target, 'gesturechange', (evt) => {
+					MxEvent.consume(evt);
+					let diff = scale - evt.scale;
 					
-					if (Math.abs(diff) > 0.2)
-					{
+					if (Math.abs(diff) > 0.2) {
 						funct(evt, diff < 0, true);
 						scale = evt.scale;
 					}
 				});
 
-				mxEvent.addListener(target, 'gestureend', function(evt)
-				{
-					mxEvent.consume(evt);
+				MxEvent.addListener(target, 'gestureend', (evt) => {
+					MxEvent.consume(evt);
 				});
-			}
-			else
-			{
-				var evtCache = [];
-				var dx0 = 0;
-				var dy0 = 0;
+			}  else {
+				let evtCache = [];
+				let dx0 = 0;
+				let dy0 = 0;
 				
 				// Adds basic listeners for graph event dispatching
-				mxEvent.addGestureListeners(target, mxUtils.bind(this, function(evt)
-				{
-					if (!mxEvent.isMouseEvent(evt) && evt.pointerId != null)
-					{
+				MxEvent.addGestureListeners(target, MxUtils.bind(this, (evt) => {
+					if (!MxEvent.isMouseEvent(evt) && evt.pointerId != null) {
 						evtCache.push(evt);
 					}
 				}),
-				mxUtils.bind(this, function(evt)
-				{
-					if (!mxEvent.isMouseEvent(evt) && evtCache.length == 2)
-					{
+				MxUtils.bind(this, (evt) => {
+					if (!MxEvent.isMouseEvent(evt) && evtCache.length === 2) {
 						// Find this event in the cache and update its record with this event
-						for (var i = 0; i < evtCache.length; i++)
-						{
-							if (evt.pointerId == evtCache[i].pointerId)
-							{
+						for (let i = 0; i < evtCache.length; i++) {
+							if (evt.pointerId === evtCache[i].pointerId) {
 								evtCache[i] = evt;
 								break;
 							}
 						}
 						
 					   	// Calculate the distance between the two pointers
-						var dx = Math.abs(evtCache[0].clientX - evtCache[1].clientX);
-						var dy = Math.abs(evtCache[0].clientY - evtCache[1].clientY);
-						var tx = Math.abs(dx - dx0);
-						var ty = Math.abs(dy - dy0);
+						let dx = Math.abs(evtCache[0].clientX - evtCache[1].clientX);
+						let dy = Math.abs(evtCache[0].clientY - evtCache[1].clientY);
+						let tx = Math.abs(dx - dx0);
+						let ty = Math.abs(dy - dy0);
 					
-						if (tx > mxEvent.PINCH_THRESHOLD || ty > mxEvent.PINCH_THRESHOLD)
-						{
-							var cx = evtCache[0].clientX + (evtCache[1].clientX - evtCache[0].clientX) / 2;
-							var cy = evtCache[0].clientY + (evtCache[1].clientY - evtCache[0].clientY) / 2;
+						if (tx > MxEvent.PINCH_THRESHOLD || ty > MxEvent.PINCH_THRESHOLD) {
+							let cx = evtCache[0].clientX + (evtCache[1].clientX - evtCache[0].clientX) / 2;
+							let cy = evtCache[0].clientY + (evtCache[1].clientY - evtCache[0].clientY) / 2;
 							
 							funct(evtCache[0], (tx > ty) ? dx > dx0 : dy > dy0, true, cx, cy);
 						
@@ -396,289 +365,228 @@ export class MxEvent {
 						}
 					}
 				}),
-				mxUtils.bind(this, function(evt)
-				{
+				MxUtils.bind(this, () => {
 					evtCache = [];
 					dx0 = 0;
 					dy0 = 0;
 				}));
 			}
 			
-			mxEvent.addListener(target, 'wheel', wheelHandler);
+			MxEvent.addListener(target, 'wheel', wheelHandler);
 		}
-	},
+	}
 	
 	/**
-	 * Function: disableContextMenu
-	 *
 	 * Disables the context menu for the given element.
+	 *
+	 * @param element - element to deactivate the context menu for
 	 */
-	disableContextMenu: function(element)
-	{
-		mxEvent.addListener(element, 'contextmenu', function(evt)
-		{
-			if (evt.preventDefault)
-			{
+	static disableContextMenu(element) {
+		MxEvent.addListener(element, 'contextmenu', (evt) => {
+			if (evt.preventDefault) {
 				evt.preventDefault();
 			}
 			
 			return false;
 		});
-	},
+	}
 	
 	/**
-	 * Function: getSource
-	 * 
 	 * Returns the event's target or srcElement depending on the browser.
+	 * @param evt - event to get the source from
 	 */
-	getSource: function(evt)
-	{
+	static getSource(evt) {
+		// noinspection JSDeprecatedSymbols
 		return (evt.srcElement != null) ? evt.srcElement : evt.target;
-	},
+	}
 
 	/**
-	 * Function: isConsumed
-	 * 
 	 * Returns true if the event has been consumed using <consume>.
+	 * @param evt event to be checked if consumed
 	 */
-	isConsumed: function(evt)
-	{
+	static isConsumed(evt) {
 		return evt.isConsumed != null && evt.isConsumed;
-	},
+	}
 
 	/**
-	 * Function: isTouchEvent
-	 * 
 	 * Returns true if the event was generated using a touch device (not a pen or mouse).
+	 * @param evt - event to be checked if a it is a touch event or not
 	 */
-	isTouchEvent: function(evt)
-	{
-		return (evt.pointerType != null) ? (evt.pointerType == 'touch' || evt.pointerType ===
+	static isTouchEvent(evt) {
+		return (evt.pointerType != null) ? (evt.pointerType === 'touch' || evt.pointerType ===
 			evt.MSPOINTER_TYPE_TOUCH) : ((evt.mozInputSource != null) ?
-					evt.mozInputSource == 5 : evt.type.indexOf('touch') == 0);
-	},
+					evt.mozInputSource === 5 : evt.type.indexOf('touch') === 0);
+	}
 
 	/**
-	 * Function: isPenEvent
-	 * 
 	 * Returns true if the event was generated using a pen (not a touch device or mouse).
+	 * @param evt - event to be checked if a it is a pen event or not
 	 */
-	isPenEvent: function(evt)
-	{
-		return (evt.pointerType != null) ? (evt.pointerType == 'pen' || evt.pointerType ===
+	static isPenEvent(evt) {
+		return (evt.pointerType != null) ? (evt.pointerType === 'pen' || evt.pointerType ===
 			evt.MSPOINTER_TYPE_PEN) : ((evt.mozInputSource != null) ?
-					evt.mozInputSource == 2 : evt.type.indexOf('pen') == 0);
-	},
+					evt.mozInputSource === 2 : evt.type.indexOf('pen') === 0);
+	}
 
 	/**
-	 * Function: isMultiTouchEvent
-	 * 
 	 * Returns true if the event was generated using a touch device (not a pen or mouse).
+	 * @param evt - event to be checked if a it is a touch event or not
 	 */
-	isMultiTouchEvent: function(evt)
-	{
-		return (evt.type != null && evt.type.indexOf('touch') == 0 && evt.touches != null && evt.touches.length > 1);
-	},
+	static isMultiTouchEvent(evt) {
+		return (evt.type != null && evt.type.indexOf('touch') === 0 && evt.touches != null && evt.touches.length > 1);
+	}
 
 	/**
-	 * Function: isMouseEvent
-	 * 
 	 * Returns true if the event was generated using a mouse (not a pen or touch device).
+	 * @param evt - event to be checked if a it is a mouse event or not
 	 */
-	isMouseEvent: function(evt)
-	{
-		return (evt.pointerType != null) ? (evt.pointerType == 'mouse' || evt.pointerType ===
+	static isMouseEvent(evt) {
+		return (evt.pointerType != null) ? (evt.pointerType === 'mouse' || evt.pointerType ===
 			evt.MSPOINTER_TYPE_MOUSE) : ((evt.mozInputSource != null) ?
-				evt.mozInputSource == 1 : evt.type.indexOf('mouse') == 0);
-	},
+				evt.mozInputSource === 1 : evt.type.indexOf('mouse') === 0);
+	}
 	
 	/**
-	 * Function: isLeftMouseButton
-	 * 
 	 * Returns true if the left mouse button is pressed for the given event.
 	 * To check if a button is pressed during a mouseMove you should use the
-	 * <mxGraph.isMouseDown> property. Note that this returns true in Firefox
+	 * <MxGraph.isMouseDown> property. Note that this returns true in Firefox
 	 * for control+left-click on the Mac.
+	 * @param evt - event to be checked if a it is a left click mouse event or not
 	 */
-	isLeftMouseButton: function(evt)
-	{
+	static isLeftMouseButton(evt) {
 		// Special case for mousemove and mousedown we check the buttons
 		// if it exists because which is 0 even if no button is pressed
-		if ('buttons' in evt && (evt.type == 'mousedown' || evt.type == 'mousemove'))
-		{
-			return evt.buttons == 1;
-		}
-		else if ('which' in evt)
-		{
+		if ('buttons' in evt && (evt.type === 'mousedown' || evt.type === 'mousemove')) {
+			return evt.buttons === 1;
+		} else if ('which' in evt) {
 	        return evt.which === 1;
-	    }
-		else
-		{
+	    } else {
 	        return evt.button === 1;
 	    }
-	},
+	}
 	
 	/**
-	 * Function: isMiddleMouseButton
-	 * 
 	 * Returns true if the middle mouse button is pressed for the given event.
 	 * To check if a button is pressed during a mouseMove you should use the
-	 * <mxGraph.isMouseDown> property.
+	 * <MxGraph.isMouseDown> property.
+	 * @param evt - event to be checked if a it is a middle button mouse event or not
 	 */
-	isMiddleMouseButton: function(evt)
-	{
-		if ('which' in evt)
-		{
+	static isMiddleMouseButton(evt) {
+		if ('which' in evt) {
 	        return evt.which === 2;
 	    }
-		else
-		{
+		else {
 	        return evt.button === 4;
 	    }
-	},
+	}
 	
 	/**
-	 * Function: isRightMouseButton
-	 * 
 	 * Returns true if the right mouse button was pressed. Note that this
 	 * button might not be available on some systems. For handling a popup
 	 * trigger <isPopupTrigger> should be used.
+	 * @param evt - event to be checked if a it is a right mouse button event or not
 	 */
-	isRightMouseButton: function(evt)
-	{
-		if ('which' in evt)
-		{
+	static isRightMouseButton(evt) {
+		if ('which' in evt) {
 	        return evt.which === 3;
-	    }
-		else
-		{
+	    } else {
 	        return evt.button === 2;
 	    }
-	},
+	}
 
 	/**
-	 * Function: isPopupTrigger
-	 * 
 	 * Returns true if the event is a popup trigger. This implementation
 	 * returns true if the right button or the left button and control was
 	 * pressed on a Mac.
+	 * @param evt
 	 */
-	isPopupTrigger: function(evt)
-	{
-		return mxEvent.isRightMouseButton(evt) || (mxClient.IS_MAC && mxEvent.isControlDown(evt) &&
-			!mxEvent.isShiftDown(evt) && !mxEvent.isMetaDown(evt) && !mxEvent.isAltDown(evt));
-	},
+	static isPopupTrigger(evt) {
+		return MxEvent.isRightMouseButton(evt) || (MxClient.IS_MAC && MxEvent.isControlDown(evt) &&
+			!MxEvent.isShiftDown(evt) && !MxEvent.isMetaDown(evt) && !MxEvent.isAltDown(evt));
+	}
 
 	/**
-	 * Function: isShiftDown
-	 * 
 	 * Returns true if the shift key is pressed for the given event.
+	 * @param evt
 	 */
-	isShiftDown: function(evt)
-	{
+	static isShiftDown(evt) {
 		return (evt != null) ? evt.shiftKey : false;
-	},
+	}
 
 	/**
-	 * Function: isAltDown
-	 * 
 	 * Returns true if the alt key is pressed for the given event.
+	 * @param evt
 	 */
-	isAltDown: function(evt)
-	{
+	static isAltDown(evt) {
 		return (evt != null) ? evt.altKey : false;
-	},
+	}
 
 	/**
-	 * Function: isControlDown
-	 * 
 	 * Returns true if the control key is pressed for the given event.
+	 * @param evt
 	 */
-	isControlDown: function(evt)
-	{
+	static isControlDown(evt) {
 		return (evt != null) ? evt.ctrlKey : false;
-	},
+	}
 
 	/**
-	 * Function: isMetaDown
-	 * 
 	 * Returns true if the meta key is pressed for the given event.
+	 * @param evt
 	 */
-	isMetaDown: function(evt)
-	{
+	static isMetaDown(evt) {
 		return (evt != null) ? evt.metaKey : false;
-	},
+	}
 
 	/**
-	 * Function: getMainEvent
-	 * 
 	 * Returns the touch or mouse event that contains the mouse coordinates.
+	 * @param e
 	 */
-	getMainEvent: function(e)
-	{
-		if ((e.type == 'touchstart' || e.type == 'touchmove') && e.touches != null && e.touches[0] != null)
-		{
+	static getMainEvent(e) {
+		if ((e.type === 'touchstart' || e.type === 'touchmove') && e.touches != null && e.touches[0] != null) {
 			e = e.touches[0];
-		}
-		else if (e.type == 'touchend' && e.changedTouches != null && e.changedTouches[0] != null)
-		{
+		} else if (e.type === 'touchend' && e.changedTouches != null && e.changedTouches[0] != null) {
 			e = e.changedTouches[0];
 		}
 		
 		return e;
-	},
+	}
 	
 	/**
-	 * Function: getClientX
-	 * 
 	 * Returns true if the meta key is pressed for the given event.
+	 * @param e
 	 */
-	getClientX: function(e)
-	{
-		return mxEvent.getMainEvent(e).clientX;
-	},
+	static getClientX(e) {
+		return MxEvent.getMainEvent(e).clientX;
+	}
 
 	/**
-	 * Function: getClientY
-	 * 
 	 * Returns true if the meta key is pressed for the given event.
+	 * @param e
 	 */
-	getClientY: function(e)
-	{
-		return mxEvent.getMainEvent(e).clientY;
-	},
+	static getClientY(e) {
+		return MxEvent.getMainEvent(e).clientY;
+	}
 
 	/**
-	 * Function: consume
-	 * 
 	 * Consumes the given event.
-	 * 
-	 * Parameters:
-	 * 
-	 * evt - Native event to be consumed.
-	 * preventDefault - Optional boolean to prevent the default for the event.
+	 * @param evt - Native event to be consumed.
+	 * @param preventDefault - Optional boolean to prevent the default for the event.
 	 * Default is true.
-	 * stopPropagation - Option boolean to stop event propagation. Default is
+	 * @param stopPropagation - Option boolean to stop event propagation. Default is
 	 * true.
 	 */
-	consume: function(evt, preventDefault, stopPropagation)
-	{
+	static consume(evt, preventDefault, stopPropagation) {
 		preventDefault = (preventDefault != null) ? preventDefault : true;
 		stopPropagation = (stopPropagation != null) ? stopPropagation : true;
 		
-		if (preventDefault)
-		{
-			if (evt.preventDefault)
-			{
-				if (stopPropagation)
-				{
+		if (preventDefault) {
+			if (evt.preventDefault) {
+				if (stopPropagation) {
 					evt.stopPropagation();
 				}
 				
 				evt.preventDefault();
-			}
-			else if (stopPropagation)
-			{
+			} else if (stopPropagation) {
 				evt.cancelBubble = true;
 			}
 		}
@@ -687,11 +595,10 @@ export class MxEvent {
 		evt.isConsumed = true;
 
 		// Other browsers
-		if (!evt.preventDefault)
-		{
+		if (!evt.preventDefault) {
 			evt.returnValue = false;
 		}
-	},
+	}
 	
 	//
 	// Special handles in mouse events
@@ -704,7 +611,7 @@ export class MxEvent {
 	 * value that does not interfere with any possible handle indices. Default
 	 * is -1.
 	 */
-	LABEL_HANDLE: -1,
+	static LABEL_HANDLE= -1;
 	
 	/**
 	 * Variable: ROTATION_HANDLE
@@ -713,7 +620,7 @@ export class MxEvent {
 	 * negative value that does not interfere with any possible handle indices.
 	 * Default is -2.
 	 */
-	ROTATION_HANDLE: -2,
+	static ROTATION_HANDLE= -2;
 	
 	/**
 	 * Variable: CUSTOM_HANDLE
@@ -722,7 +629,7 @@ export class MxEvent {
 	 * negative value and is the start index which is decremented for each
 	 * custom handle. Default is -100.
 	 */
-	CUSTOM_HANDLE: -100,
+	static CUSTOM_HANDLE= -100;
 	
 	/**
 	 * Variable: VIRTUAL_HANDLE
@@ -733,7 +640,7 @@ export class MxEvent {
 	 * than VIRTUAL_HANDLE - CUSTOM_HANDLE custom handles.
 	 * 
 	 */
-	VIRTUAL_HANDLE: -100000,
+	static VIRTUAL_HANDLE=-100000;
 	
 	//
 	// Event names
@@ -744,7 +651,7 @@ export class MxEvent {
 	 *
 	 * Specifies the event name for mouseDown.
 	 */
-	MOUSE_DOWN: 'mouseDown',
+	static MOUSE_DOWN='mouseDown';
 	
 	/**
 	 * Variable: MOUSE_MOVE
@@ -1419,4 +1326,4 @@ export class MxEvent {
 	 */
 	static PINCH_THRESHOLD=10;
 
-};
+}
